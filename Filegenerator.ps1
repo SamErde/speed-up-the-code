@@ -47,35 +47,11 @@ Measure-Command {
 
     Write-Host 'Generating log entries...'
 
-    # For high-performance date formatting, convert to a char array and decrement manually
-    $timestampChars = $baseDate.ToString('yyyy-MM-dd HH:mm:ss').ToCharArray()
-    $ss_offset = 17
-    $mm_offset = 14
-    $hh_offset = 11
-    $dd_offset = 8
-
     for ($i = 0; $i -lt $count; $i++) {
-        if ($i -gt 0) {
-            # Decrement seconds
-            $s2 = [int][char]::GetNumericValue($timestampChars[$ss_offset])
-            if ($s2 > 0) {
-                $timestampChars[$ss_offset] = [char]([int]$timestampChars[$ss_offset] - 1)
-            } else {
-                $timestampChars[$ss_offset] = '9'
-                $s1 = [int][char]::GetNumericValue($timestampChars[$ss_offset - 1])
-                if ($s1 > 0) {
-                    $timestampChars[$ss_offset - 1] = [char]([int]$timestampChars[$ss_offset - 1] - 1)
-                } else {
-                    # This part handles cascading decrements for minutes, hours, and days
-                    # For simplicity and performance, this example only handles second decrements
-                    # A full implementation would require more complex date math here
-                    # For this script's purpose, we re-calculate when wrapping around a minute
-                    $currentTicks = $baseDateTicks - ($i * $ticksPerSecond)
-                    $timestampChars = [DateTime]::new($currentTicks).ToString('yyyy-MM-dd HH:mm:ss').ToCharArray()
-                }
-            }
-        }
-        $timestamp = [string]::new($timestampChars)
+        # More efficient timestamp calculation
+        $currentTicks = $baseDateTicks - ($i * $ticksPerSecond)
+        $timestamp = [DateTime]::new($currentTicks).ToString('yyyy-MM-dd HH:mm:ss')
+
         # Cache array lookups
         $plc = $plcNames[$plcIndices[$i]]
         $status = $statusCodes[$statusIndices[$i]]
